@@ -2,8 +2,10 @@ package com.vt;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import com.vt.dto.LoginDTO;
@@ -36,13 +38,14 @@ public class ViettelAutoProcessor{
 			phantomjs = System.getProperty("user.dir") + "\\tool\\phantomjs\\";
 			System.setProperty(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, phantomjs);
 		}
-		DesiredCapabilities caps = new DesiredCapabilities();
-		caps.setJavascriptEnabled(true);
-		caps.setCapability("takesScreenshot", true);
-		caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, phantomjs + "phantomjs.exe");
+		DesiredCapabilities capabilities = new DesiredCapabilities();
+		capabilities.setJavascriptEnabled(true);
+		capabilities.setCapability(CapabilityType.BROWSER_NAME, "FIREFOX");
+        capabilities.setCapability(FirefoxDriver.PROFILE, true); 
+        capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, phantomjs + "phantomjs.exe");
 
 		System.out.println("----STARTING-----");
-		WebDriver driver = new PhantomJSDriver(caps);
+		WebDriver driver = new PhantomJSDriver(capabilities);
 
 		long startTime = System.nanoTime();
 
