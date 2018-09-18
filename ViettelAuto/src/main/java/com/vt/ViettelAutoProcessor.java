@@ -23,7 +23,7 @@ public class ViettelAutoProcessor{
 		this.loginDto = loginDto;
 		this.naptheDto = naptheDto;
 	}
-	public String execute() { 
+	public synchronized String execute() { 
 		System.out.println("Doing heavy processing - START " + Thread.currentThread().getName());
 		
 		//
