@@ -14,18 +14,20 @@ import com.vt.login.LoginProcessor;
 import com.vt.logout.LogoutProcessor;
 import com.vt.napthe.NaptheFTTHTraSauProcessor;
 
-public class ViettelAutoProcessor{
-	
+public class ViettelAutoProcessor {
+
 	private LoginDTO loginDto;
 	private NapTheDTO naptheDto;
-	
-	public ViettelAutoProcessor(LoginDTO loginDto, NapTheDTO naptheDto) {
+	private String pathExe;
+
+	public ViettelAutoProcessor(LoginDTO loginDto, NapTheDTO naptheDto, String pathExe) {
 		this.loginDto = loginDto;
 		this.naptheDto = naptheDto;
 	}
-	public synchronized String execute() { 
+
+	public synchronized String execute() {
 		System.out.println("Doing heavy processing - START " + Thread.currentThread().getName());
-		
+
 		//
 		// String geckoDriverPath = System.getProperty(DRIVER_PATH);
 		// if (StringUtils.isEmpty(geckoDriverPath)) {
@@ -41,16 +43,11 @@ public class ViettelAutoProcessor{
 		// firefoxOptions.setBinary(firefoxBinary);
 		// FirefoxDriver driver = new FirefoxDriver(firefoxOptions);
 
-		String phantomjs = System.getProperty(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY);
-		if (StringUtils.isEmpty(phantomjs)) {
-			phantomjs = System.getProperty("user.dir") + "\\tool\\phantomjs\\";
-			System.setProperty(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, phantomjs);
-		}
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		capabilities.setJavascriptEnabled(true);
 		capabilities.setCapability(CapabilityType.BROWSER_NAME, "FIREFOX");
-        capabilities.setCapability(FirefoxDriver.PROFILE, true); 
-        capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, phantomjs + "phantomjs.exe");
+		capabilities.setCapability(FirefoxDriver.PROFILE, true);
+		capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, pathExe);
 
 		System.out.println("----STARTING-----");
 		WebDriver driver = new PhantomJSDriver(capabilities);
@@ -60,20 +57,23 @@ public class ViettelAutoProcessor{
 		try {
 			Thread.sleep(1000);
 
-			LoginProcessor loginProcessor = new LoginProcessor(driver, loginDto);
-			boolean isLogged = loginProcessor.execute();
-			if (!isLogged) {
-				System.out.println("LOGIN FAILED");
-				return "ERROR: LOGIN FAILED";
+			if (loginDto.isHasLoginLogout()) {
+				LoginProcessor loginProcessor = new LoginProcessor(driver, loginDto);
+				boolean isLogged = loginProcessor.execute();
+				if (!isLogged) {
+					System.out.println("LOGIN FAILED");
+					return "ERROR: LOGIN FAILED";
+				}
 			}
-
 			NaptheFTTHTraSauProcessor naptheProcessor = new NaptheFTTHTraSauProcessor(driver, naptheDto);
 			String message = naptheProcessor.execute();
 			System.out.println(message);
 
-			LogoutProcessor logoutProcessor = new LogoutProcessor(driver);
-			logoutProcessor.execute();
-
+			if (loginDto.isHasLoginLogout()) {
+				LogoutProcessor logoutProcessor = new LogoutProcessor(driver);
+				logoutProcessor.execute();
+			}
+			
 			System.out.println("----END-----");
 
 			long endTime = System.nanoTime();
@@ -92,18 +92,29 @@ public class ViettelAutoProcessor{
 		}
 
 	}
+
 	public LoginDTO getLoginDto() {
 		return loginDto;
 	}
+
 	public void setLoginDto(LoginDTO loginDto) {
 		this.loginDto = loginDto;
 	}
+
 	public NapTheDTO getNaptheDto() {
 		return naptheDto;
 	}
+
 	public void setNaptheDto(NapTheDTO naptheDto) {
 		this.naptheDto = naptheDto;
 	}
-	
-	
+
+	public String getPathExe() {
+		return pathExe;
+	}
+
+	public void setPathExe(String pathExe) {
+		this.pathExe = pathExe;
+	}
+
 }

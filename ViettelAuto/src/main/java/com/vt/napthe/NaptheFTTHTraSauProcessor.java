@@ -66,8 +66,7 @@ public class NaptheFTTHTraSauProcessor {
 			}
 			strBuilder = new StringBuilder();
 
-			driver.get(BASE_URL);
-			PageUtils.waitForLoad(driver);
+			driver.get(BASE_URL); 
 
 			// wait loading element
 			(new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {

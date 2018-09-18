@@ -11,8 +11,17 @@ public class MainRunnable extends Thread {
 				LoginDTO loginDto = new LoginDTO("h004_gftth_longnd193", "020791a@", LoginMethodEnum.ADSL_FTTH_NEXTTV);
 				NapTheDTO naptheDto = new NapTheDTO(NapTheMethodEnum.DIDONG_DCOM, "0961005566", "511380099753328");
 
-				ViettelAutoProcessor viettelAuto = new ViettelAutoProcessor(loginDto, naptheDto);
-				viettelAuto.execute();
+				for (int i = 0; i < 10; i++) {
+					System.out.println("Chay lan : " + i);
+					try {
+						Thread.sleep(1000);
+						//ViettelAutoProcessor viettelAuto = new ViettelAutoProcessor(loginDto, naptheDto);
+						//viettelAuto.execute();
+					} catch (InterruptedException e) { 
+						e.printStackTrace();
+					}
+
+				}
 			}
 		};
 		threadKeepSession.start();
