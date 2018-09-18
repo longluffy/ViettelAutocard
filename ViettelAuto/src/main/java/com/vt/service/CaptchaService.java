@@ -3,8 +3,6 @@ package com.vt.service;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.DeathByCaptcha.Captcha;
 import com.DeathByCaptcha.Client;
 import com.DeathByCaptcha.Exception;

@@ -41,7 +41,15 @@ public class NaptheFTTHTraSauProcessor {
 	private final static String MA_THE_CAO_XPATH = "//form[@id='fee_payment']/div[5]/div[2]//input[@name='pay[code]']";
 	private final static String IMG_CAPTCHA_XPATH = "//form[@id='fee_payment']/div[6]/div[2]/a/img[@class='captcha']";
 
-	public static String execute(WebDriver driver, NapTheDTO napTheDto) throws IOException {
+	private WebDriver driver;
+	private NapTheDTO napTheDto;
+
+	public NaptheFTTHTraSauProcessor(WebDriver driver, NapTheDTO napTheDto) {
+		this.driver = driver;
+		this.napTheDto = napTheDto;
+	}
+
+	public String execute() throws IOException {
 
 		if (napTheDto == null || StringUtils.isEmpty(napTheDto.getMaTheCao())
 				|| StringUtils.isEmpty(napTheDto.getSoThueBao()) || napTheDto.getServiceType() == null) {
@@ -57,7 +65,7 @@ public class NaptheFTTHTraSauProcessor {
 				break;
 			}
 			strBuilder = new StringBuilder();
-			
+
 			driver.get(BASE_URL);
 			PageUtils.waitForLoad(driver);
 
@@ -91,7 +99,7 @@ public class NaptheFTTHTraSauProcessor {
 			}
 
 			Captcha captcha = null;
-			while (null == captcha||captcha.text.isEmpty()) {
+			while (null == captcha || captcha.text.isEmpty()) {
 				try {
 					captcha = CaptchaService.requestCheckCaptcha(fileLocation);
 				} catch (Exception e) {
@@ -99,7 +107,6 @@ public class NaptheFTTHTraSauProcessor {
 				}
 			}
 			String captchaText = captcha.text;
-
 
 			WebElement dichVuEl = driver.findElement(By.id(DICH_VU_ID));
 			WebElement sothuebaoEl = driver.findElement(By.id(SO_THUE_BAO_ID));
@@ -132,17 +139,17 @@ public class NaptheFTTHTraSauProcessor {
 					}
 				}
 			}
-			
+
 			String message = strBuilder.toString();
 			if (StringUtils.isNotEmpty(message)) {
 				String messageFormat = VNCharacterService.removeAccent(message);
 				System.out.println("messageFormat: " + messageFormat);
 				String mabaomat = VNCharacterService.removeAccent("Mã bảo mật");
 				System.out.println("mabaomat: " + mabaomat);
-				
+
 				if (!messageFormat.contains(mabaomat)) {
 					break;
-				}else {
+				} else {
 					CaptchaService.reportIncorectCaptcha(captcha);
 				}
 			}
@@ -151,7 +158,7 @@ public class NaptheFTTHTraSauProcessor {
 		return strBuilder.toString();
 	}
 
-	private static String captureCaptcha(WebDriver driver) throws IOException {
+	private String captureCaptcha(WebDriver driver) throws IOException {
 		// get image captcha
 		WebElement imgCaptchaEl = driver.findElement(By.xpath(IMG_CAPTCHA_XPATH));
 
@@ -186,20 +193,20 @@ public class NaptheFTTHTraSauProcessor {
 		return "";
 	}
 
-	private static void checkboxClicked(WebDriver driver) {
+	private void checkboxClicked(WebDriver driver) {
 		JavascriptExecutor jse = (JavascriptExecutor) driver;
 		WebElement element = driver.findElement(By.id(CHECKBOX_OTHER_INPUT_ID));
 		jse.executeScript("arguments[0].click();", element);
 	}
 
-	private static String getPathFileCaptcha(String linkImageSrc) {
+	private String getPathFileCaptcha(String linkImageSrc) {
 		String fileName = getImageNameBySID(linkImageSrc);
 		String folder = System.getProperty("user.dir") + "\\captcha\\";
 		String destFile = folder + fileName;
 		return destFile;
 	}
 
-	public static String getImageNameBySID(String linkImageSrc) {
+	public String getImageNameBySID(String linkImageSrc) {
 		String[] params = linkImageSrc.split("&");
 		for (String param : params) {
 			String name = param.split("=")[0];
@@ -211,4 +218,21 @@ public class NaptheFTTHTraSauProcessor {
 		return "captcha_im.png";
 	}
 
+	public WebDriver getDriver() {
+		return driver;
+	}
+
+	public void setDriver(WebDriver driver) {
+		this.driver = driver;
+	}
+
+	public NapTheDTO getNapTheDto() {
+		return napTheDto;
+	}
+
+	public void setNapTheDto(NapTheDTO napTheDto) {
+		this.napTheDto = napTheDto;
+	}
+
+	
 }

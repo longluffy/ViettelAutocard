@@ -1,5 +1,7 @@
 package com.vt.login;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -19,7 +21,15 @@ public class LoginProcessor {
 
 	private final static String BASE_URL = "https://viettel.vn/dang-nhap";
 
-	public static boolean execute(WebDriver driver, LoginDTO loginDto) {
+	private WebDriver driver;
+	private LoginDTO loginDto;
+
+	public LoginProcessor(WebDriver driver, LoginDTO loginDto) {
+		this.driver = driver;
+		this.loginDto = loginDto;
+	}
+
+	public boolean execute() {
 		if (loginDto == null || StringUtils.isEmpty(loginDto.getUsername())
 				|| StringUtils.isEmpty(loginDto.getPassword()) || loginDto.getCategory() == null) {
 			return false;
@@ -27,7 +37,9 @@ public class LoginProcessor {
 
 		System.out.println(">> START LOGIN <<");
 		driver.get(BASE_URL);
-
+		driver.manage().timeouts().implicitlyWait(4,
+		          TimeUnit.SECONDS);
+		
 		(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
 			public Boolean apply(WebDriver d) {
 				return isLoadedForm(d);
@@ -50,7 +62,6 @@ public class LoginProcessor {
 		passwordEl.sendKeys(loginDto.getPassword());
 		categorySignInEl.sendKeys(loginDto.getCategory().name());
 
-		
 		buttonLoginEl.click();
 		PageUtils.waitForLoad(driver);
 
@@ -63,8 +74,24 @@ public class LoginProcessor {
 		return false;
 	}
 
-	private static boolean isLoadedForm(WebDriver d) {
+	private boolean isLoadedForm(WebDriver d) {
 		return d.findElement(By.id(CSRF_TOKEN)) != null && d.findElement(By.id(USER_NAME_ID)) != null
 				&& d.findElement(By.id(PASSWORD_ID)) != null && d.findElement(By.id(SIGN_IN_CATEGORY_ID)) != null;
+	}
+
+	public WebDriver getDriver() {
+		return driver;
+	}
+
+	public void setDriver(WebDriver driver) {
+		this.driver = driver;
+	}
+
+	public LoginDTO getLoginDto() {
+		return loginDto;
+	}
+
+	public void setLoginDto(LoginDTO loginDto) {
+		this.loginDto = loginDto;
 	}
 }
