@@ -15,7 +15,15 @@ import com.vt.logout.LogoutProcessor;
 import com.vt.napthe.NaptheFTTHTraSauProcessor;
 
 public class ViettelAutoProcessor{
-	public String execute(LoginDTO loginDto, NapTheDTO naptheDto) { 
+	
+	private LoginDTO loginDto;
+	private NapTheDTO naptheDto;
+	
+	public ViettelAutoProcessor(LoginDTO loginDto, NapTheDTO naptheDto) {
+		this.loginDto = loginDto;
+		this.naptheDto = naptheDto;
+	}
+	public String execute() { 
 		System.out.println("Doing heavy processing - START " + Thread.currentThread().getName());
 		
 		//
@@ -84,4 +92,18 @@ public class ViettelAutoProcessor{
 		}
 
 	}
+	public LoginDTO getLoginDto() {
+		return loginDto;
+	}
+	public void setLoginDto(LoginDTO loginDto) {
+		this.loginDto = loginDto;
+	}
+	public NapTheDTO getNaptheDto() {
+		return naptheDto;
+	}
+	public void setNaptheDto(NapTheDTO naptheDto) {
+		this.naptheDto = naptheDto;
+	}
+	
+	
 }
