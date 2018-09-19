@@ -61,7 +61,7 @@ public class NaptheFTTHTraSauProcessor {
 		while (true) {
 			countRetry = countRetry + 1;
 			System.out.println("RETRY TIMES: " + countRetry);
-			if (countRetry > 5) {
+			if (countRetry > 7) {
 				break;
 			}
 			strBuilder = new StringBuilder();
@@ -98,7 +98,12 @@ public class NaptheFTTHTraSauProcessor {
 			}
 
 			Captcha captcha = null;
+			int retrycaptcha=0; 
 			while (null == captcha || captcha.text.isEmpty()) {
+				retrycaptcha+=1;
+				if (retrycaptcha > 3) {
+					break;
+				}
 				try {
 					captcha = CaptchaService.requestCheckCaptcha(fileLocation);
 				} catch (Exception e) {

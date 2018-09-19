@@ -23,6 +23,7 @@ public class ViettelAutoProcessor {
 	public ViettelAutoProcessor(LoginDTO loginDto, NapTheDTO naptheDto, String pathExe) {
 		this.loginDto = loginDto;
 		this.naptheDto = naptheDto;
+		this.pathExe =pathExe;
 	}
 
 	public synchronized String execute() {
