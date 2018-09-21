@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -62,20 +63,33 @@ public class NaptheFTTHTraSauProcessor {
 			countRetry = countRetry + 1;
 			System.out.println("RETRY TIMES: " + countRetry);
 			if (countRetry > 7) {
+				System.out.println("too many retry ... quit after :" + countRetry);
 				break;
 			}
 			strBuilder = new StringBuilder();
+			System.out.println("prepareto get to the page");
 
-			driver.get(BASE_URL); 
+			try {
+				driver.manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
+				driver.get(BASE_URL);
 
+			} catch (Exception e) {
+				// TODO: handle exception
+				System.out.println("get request timeout");
+
+				continue;
+			}
+
+			System.out.println("get request success -prepare to wait element");
 			// wait loading element
-			(new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
 				public Boolean apply(WebDriver d) {
 					return driver.findElement(By.xpath(CHECKBOX_OTHER_XPATH)) != null
 							&& driver.findElement(By.id(FORM_ID)) != null;
 				}
 			});
 
+			System.out.println("get check box nạp cho số khác");
 			// checkbox element
 			WebElement checkboxContainerEl = driver.findElement(By.xpath(CHECKBOX_OTHER_XPATH));
 			if (checkboxContainerEl == null) {
@@ -85,6 +99,8 @@ public class NaptheFTTHTraSauProcessor {
 				checkboxClicked(driver);
 			}
 
+			System.out.println("get check box nạp cho số khác");
+
 			// // wait for captcha
 			(new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {
 				public Boolean apply(WebDriver d) {
@@ -92,26 +108,29 @@ public class NaptheFTTHTraSauProcessor {
 				}
 			});
 
+			System.out.println("get được captcha element");
+
 			String fileLocation = captureCaptcha(driver);
 			if (StringUtils.isEmpty(fileLocation)) {
 				return "ERROR: Captcha is not captured";
 			}
+			System.out.println("get được captcha img");
 
 			Captcha captcha = null;
-			int retrycaptcha=0; 
+			int retrycaptcha = 0;
 			while (null == captcha || captcha.text.isEmpty()) {
-				retrycaptcha+=1;
+				retrycaptcha += 1;
 				if (retrycaptcha > 3) {
 					break;
 				}
 				try {
 					captcha = CaptchaService.requestCheckCaptcha(fileLocation);
 				} catch (Exception e) {
-
+					e.printStackTrace();
 				}
 			}
 			String captchaText = captcha.text;
-
+			System.out.println("got captcha : " + captchaText);
 			WebElement dichVuEl = driver.findElement(By.id(DICH_VU_ID));
 			WebElement sothuebaoEl = driver.findElement(By.id(SO_THUE_BAO_ID));
 			WebElement mathecaoEl = driver.findElement(By.xpath(MA_THE_CAO_XPATH));
@@ -121,21 +140,34 @@ public class NaptheFTTHTraSauProcessor {
 				return "ERROR: Form fee_payment is invisible.";
 			}
 
+			System.out.println("got elements to fill params");
 			// change data here
 			dichVuEl.sendKeys(napTheDto.getServiceType().name());
 			sothuebaoEl.sendKeys(napTheDto.getSoThueBao());
 			mathecaoEl.sendKeys(napTheDto.getMaTheCao());
 			captchaEl.sendKeys(captchaText);
 
-			// submit form
-			WebElement formEl = driver.findElement(By.id(DICH_VU_ID));
-			formEl.submit();
+			System.out.println("values filled");
+
+			try {
+
+				// submit form
+				WebElement formEl = driver.findElement(By.id(DICH_VU_ID));
+				formEl.submit();
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+				System.out.println("submit form error");
+				continue;
+			}
+
+			System.out.println("form submitted");
 
 			PageUtils.waitForLoad(driver);
 
 			// get error message
 			List<WebElement> errorMessagesEl = driver.findElements(By.className("error-message"));
-
+			System.out.println("got response message array");
 			if (errorMessagesEl != null && errorMessagesEl.size() > 0) {
 				for (WebElement el : errorMessagesEl) {
 					if (!strBuilder.toString().contains(el.getText()) && StringUtils.isNotEmpty(el.getText())) {
@@ -145,20 +177,20 @@ public class NaptheFTTHTraSauProcessor {
 			}
 
 			String message = strBuilder.toString();
+			System.out.println("got response mesage : " + message);
 			if (StringUtils.isNotEmpty(message)) {
 				String messageFormat = VNCharacterService.removeAccent(message);
-				System.out.println("messageFormat: " + messageFormat);
 				String mabaomat = VNCharacterService.removeAccent("Mã bảo mật");
-				System.out.println("mabaomat: " + mabaomat);
 
 				if (!messageFormat.contains(mabaomat)) {
+					System.out.println("done, break");
 					break;
 				} else {
 					CaptchaService.reportIncorectCaptcha(captcha);
 				}
 			}
 		}
-		System.out.println(strBuilder.toString());
+		System.out.println("return: " + strBuilder.toString());
 		return strBuilder.toString();
 	}
 
@@ -238,5 +270,4 @@ public class NaptheFTTHTraSauProcessor {
 		this.napTheDto = napTheDto;
 	}
 
-	
 }

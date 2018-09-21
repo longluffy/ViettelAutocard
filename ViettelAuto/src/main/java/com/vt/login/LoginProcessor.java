@@ -37,15 +37,15 @@ public class LoginProcessor {
 
 		System.out.println(">> START LOGIN <<");
 		driver.get(BASE_URL);
-		driver.manage().timeouts().implicitlyWait(4,
-		          TimeUnit.SECONDS);
-		
+		driver.manage().timeouts().implicitlyWait(4, TimeUnit.SECONDS);
+
 		(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
 			public Boolean apply(WebDriver d) {
 				return isLoadedForm(d);
 			}
 		});
 
+		System.out.println("form loadded");
 		// Find the text input element by its vt_signin__csrf_token
 		WebElement csrfTokenEl = driver.findElement(By.id(CSRF_TOKEN));
 		WebElement userNameEl = driver.findElement(By.id(USER_NAME_ID));
@@ -62,7 +62,9 @@ public class LoginProcessor {
 		passwordEl.sendKeys(loginDto.getPassword());
 		categorySignInEl.sendKeys(loginDto.getCategory().name());
 
+		System.out.println("param typed");
 		buttonLoginEl.click();
+		System.out.println("login clicked");
 		PageUtils.waitForLoad(driver);
 
 		WebElement logoutEl = PageUtils.getLogoutLinkElement(driver);
