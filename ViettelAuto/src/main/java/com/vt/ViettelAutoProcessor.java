@@ -1,7 +1,8 @@
 package com.vt;
 
-import org.apache.commons.lang3.StringUtils;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
@@ -11,8 +12,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import com.vt.dto.LoginDTO;
 import com.vt.dto.NapTheDTO;
 import com.vt.login.LoginProcessor;
-import com.vt.logout.LogoutProcessor;
 import com.vt.napthe.NaptheFTTHTraSauProcessor;
+import com.vt.webelement.PageUtils;
 
 public class ViettelAutoProcessor {
 
@@ -20,9 +21,12 @@ public class ViettelAutoProcessor {
 	private NapTheDTO naptheDto;
 	private String pathExe;
 
+	private final static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.41 Safari/535.1";
+
 	public ViettelAutoProcessor(LoginDTO loginDto, NapTheDTO naptheDto, String pathExe) {
 		this.loginDto = loginDto;
 		this.naptheDto = naptheDto;
+		this.pathExe = pathExe;
 	}
 
 	public synchronized String execute() {
@@ -46,18 +50,28 @@ public class ViettelAutoProcessor {
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		capabilities.setJavascriptEnabled(true);
 		capabilities.setCapability(CapabilityType.BROWSER_NAME, "FIREFOX");
+		capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "userAgent", USER_AGENT);
 		capabilities.setCapability(FirefoxDriver.PROFILE, true);
+		System.setProperty(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, pathExe);
 		capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, pathExe);
 
 		System.out.println("----STARTING-----");
 		WebDriver driver = new PhantomJSDriver(capabilities);
 
+		driver.manage().window().setSize(new Dimension(320, 480));
+		 
 		long startTime = System.nanoTime();
 
 		try {
-			Thread.sleep(1000);
+			driver.get("https://viettel.vn/m/");
+			PageUtils.waitForLoad(driver);
 
-			if (loginDto.isHasLoginLogout()) {
+			// checklogin
+			WebElement loginLink = PageUtils.getLoginLinkElement(driver);
+			System.out.println("loginLink == null");
+			
+			if (loginLink != null) {
+				System.out.println("loginLink != null");
 				LoginProcessor loginProcessor = new LoginProcessor(driver, loginDto);
 				boolean isLogged = loginProcessor.execute();
 				if (!isLogged) {
@@ -65,16 +79,15 @@ public class ViettelAutoProcessor {
 					return "ERROR: LOGIN FAILED";
 				}
 			}
+
+			// goto trang chu
+			driver.get("https://viettel.vn/myvt/trang-chu");
+			PageUtils.waitForLoad(driver);
+  
 			NaptheFTTHTraSauProcessor naptheProcessor = new NaptheFTTHTraSauProcessor(driver, naptheDto);
 			String message = naptheProcessor.execute();
-			System.out.println(message);
 
-			if (loginDto.isHasLoginLogout()) {
-				LogoutProcessor logoutProcessor = new LogoutProcessor(driver);
-				logoutProcessor.execute();
-			}
-			
-			System.out.println("----END-----");
+			System.out.println(message);
 
 			long endTime = System.nanoTime();
 			long duration = (endTime - startTime);

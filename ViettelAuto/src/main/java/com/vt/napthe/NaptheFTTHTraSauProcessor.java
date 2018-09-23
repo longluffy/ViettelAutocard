@@ -27,8 +27,6 @@ import com.vt.webelement.PageUtils;
 
 public class NaptheFTTHTraSauProcessor {
 
-	private final static String BASE_URL = "https://viettel.vn/my-viettel/quan-ly-cuoc-thanh-toan/nap-the";
-
 	// element
 	private final static String FORM_ID = "fee_payment";
 	private final static String SO_THUE_BAO_ID = "payment_isdn";
@@ -66,31 +64,29 @@ public class NaptheFTTHTraSauProcessor {
 			}
 			strBuilder = new StringBuilder();
 
-			driver.get(BASE_URL); 
+			// file button nap
+			WebElement buttonNapTien = driver.findElement(By.xpath("//a[@href='#chon-hinh-thuc-nap']"));
+			if (buttonNapTien == null) {
+				return "ERROR: NOT FIND ButtonNapTien";
+			}
+
+			System.out.println("buttonNapTien");
+			buttonNapTien.click();
 
 			// wait loading element
-			(new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
 				public Boolean apply(WebDriver d) {
-					return driver.findElement(By.xpath(CHECKBOX_OTHER_XPATH)) != null
-							&& driver.findElement(By.id(FORM_ID)) != null;
+					return driver.findElement(By.id("chon-hinh-thuc-nap")) != null;
 				}
 			});
 
-			// checkbox element
-			WebElement checkboxContainerEl = driver.findElement(By.xpath(CHECKBOX_OTHER_XPATH));
-			if (checkboxContainerEl == null) {
-				return "ERROR: WebElement checkboxContainerEl";
+			// the cao
+			WebElement buttonTheCao = driver.findElement(By.xpath("//a[@href='#nap-the-cao']"));
+			if (buttonTheCao == null) {
+				return "ERROR: NOT FIND buttonTheCao";
 			}
-			if (!checkboxContainerEl.isSelected()) {
-				checkboxClicked(driver);
-			}
-
-			// // wait for captcha
-			(new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {
-				public Boolean apply(WebDriver d) {
-					return d.findElement(By.xpath(IMG_CAPTCHA_XPATH)) != null;
-				}
-			});
+			buttonTheCao.click();
+  
 
 			String fileLocation = captureCaptcha(driver);
 			if (StringUtils.isEmpty(fileLocation)) {
@@ -233,5 +229,4 @@ public class NaptheFTTHTraSauProcessor {
 		this.napTheDto = napTheDto;
 	}
 
-	
 }
