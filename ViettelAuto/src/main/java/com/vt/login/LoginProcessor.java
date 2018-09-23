@@ -30,6 +30,9 @@ public class LoginProcessor {
 	}
 
 	public boolean execute() {
+		 PageUtils.offlogging();
+		 
+		 
 		if (loginDto == null || StringUtils.isEmpty(loginDto.getUsername())
 				|| StringUtils.isEmpty(loginDto.getPassword()) || loginDto.getCategory() == null) {
 			return false;
