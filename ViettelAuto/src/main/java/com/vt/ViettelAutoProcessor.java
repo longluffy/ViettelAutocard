@@ -1,18 +1,29 @@
 package com.vt;
 
-import org.apache.commons.lang3.StringUtils;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.ProtocolHandshake;
 
+import com.vt.dto.IpProxyDTO;
 import com.vt.dto.LoginDTO;
 import com.vt.dto.NapTheDTO;
 import com.vt.login.LoginProcessor;
 import com.vt.logout.LogoutProcessor;
 import com.vt.napthe.NaptheFTTHTraSauProcessor;
+import com.vt.webelement.PageUtils;
 
 public class ViettelAutoProcessor {
 
@@ -23,40 +34,32 @@ public class ViettelAutoProcessor {
 	public ViettelAutoProcessor(LoginDTO loginDto, NapTheDTO naptheDto, String pathExe) {
 		this.loginDto = loginDto;
 		this.naptheDto = naptheDto;
-		this.pathExe =pathExe;
+		this.pathExe = pathExe;
 	}
 
 	public synchronized String execute() {
-		System.out.println("Doing heavy processing - START " + Thread.currentThread().getName());
-
-		//
-		// String geckoDriverPath = System.getProperty(DRIVER_PATH);
-		// if (StringUtils.isEmpty(geckoDriverPath)) {
-		// // user path
-		// final String geckoDriver = System.getProperty("user.dir") +
-		// "\\tool\\driver\\window_64\\geckodriver.exe";
-		// System.setProperty("webdriver.gecko.driver", geckoDriver);
-		// }
-		//
-		// FirefoxBinary firefoxBinary = new FirefoxBinary();
-		// firefoxBinary.addCommandLineOptions("--headless");
-		// FirefoxOptions firefoxOptions = new FirefoxOptions();
-		// firefoxOptions.setBinary(firefoxBinary);
-		// FirefoxDriver driver = new FirefoxDriver(firefoxOptions);
-
-		DesiredCapabilities capabilities = new DesiredCapabilities();
-		capabilities.setJavascriptEnabled(true);
-		capabilities.setCapability(CapabilityType.BROWSER_NAME, "FIREFOX");
-		capabilities.setCapability(FirefoxDriver.PROFILE, true);
-		capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, pathExe);
-
-		System.out.println("----STARTING-----");
-		WebDriver driver = new PhantomJSDriver(capabilities);
-
-		long startTime = System.nanoTime();
+		WebDriver driver = null;
+		PageUtils.offlogging();
 
 		try {
-			Thread.sleep(1000);
+			IpProxyDTO ipProxyDTO = fakeProxyVN();
+
+			// options
+			DesiredCapabilities capabilities = new DesiredCapabilities();
+
+			// fake ip
+			ArrayList<String> cliArgsCap = new ArrayList<String>();
+			cliArgsCap.add("--proxy=" + ipProxyDTO.getHost() + ":" + ipProxyDTO.getPort());
+			cliArgsCap.add("--webdriver-loglevel=NONE");
+
+			capabilities.setJavascriptEnabled(true);
+			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, pathExe);
+			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
+
+			System.out.println("----STARTING-----");
+
+			driver = new PhantomJSDriver(capabilities);
+			long startTime = System.nanoTime();
 
 			if (loginDto.isHasLoginLogout()) {
 				LoginProcessor loginProcessor = new LoginProcessor(driver, loginDto);
@@ -74,7 +77,7 @@ public class ViettelAutoProcessor {
 				LogoutProcessor logoutProcessor = new LogoutProcessor(driver);
 				logoutProcessor.execute();
 			}
-			
+
 			System.out.println("----END-----");
 
 			long endTime = System.nanoTime();
@@ -82,16 +85,45 @@ public class ViettelAutoProcessor {
 			double seconds = (double) duration / 1000000000.0;
 
 			System.out.println("TIME SPENT: " + seconds + "s");
-			System.out.println("Doing heavy processing - END " + Thread.currentThread().getName());
 			driver.quit();
 			return message;
 
 		} catch (Exception e) {
 			System.out.println("INTERNAL SERVER ERROR");
-			driver.quit();
+			if (driver != null) {
+				driver.quit();
+			}
 			return "SERVER ERROR: " + e.getMessage();
 		}
+	}
 
+	private IpProxyDTO fakeProxyVN() throws IOException, JSONException {
+		String url = "https://api.getproxylist.com/proxy?country[]=VN";
+		URL obj = new URL(url);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		// optional default is GET
+		con.setRequestMethod("GET");
+		// add request header
+		con.setRequestProperty("User-Agent", "Mozilla/5.0");
+		int responseCode = con.getResponseCode();
+		System.out.println("\nSending 'GET' request to URL : " + url);
+		System.out.println("Response Code : " + responseCode);
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer response = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+ 
+		// Read JSON response and print
+		JSONObject myResponse = new JSONObject(response.toString());
+		String host = myResponse.getString("ip");
+		int port = myResponse.getInt("port");
+		System.out.println("host: " + host + "--" + "port:" + port);
+		IpProxyDTO ipProxyDto = new IpProxyDTO(host, port);
+
+		return ipProxyDto;
 	}
 
 	public LoginDTO getLoginDto() {

@@ -51,7 +51,8 @@ public class NaptheFTTHTraSauProcessor {
 	}
 
 	public String execute() throws IOException {
-
+		 PageUtils.offlogging();
+		 
 		if (napTheDto == null || StringUtils.isEmpty(napTheDto.getMaTheCao())
 				|| StringUtils.isEmpty(napTheDto.getSoThueBao()) || napTheDto.getServiceType() == null) {
 			return "ERROR: param error";

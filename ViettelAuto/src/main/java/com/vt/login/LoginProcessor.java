@@ -1,7 +1,5 @@
 package com.vt.login;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -20,6 +18,8 @@ public class LoginProcessor {
 	private static final String SIGN_IN_CATEGORY_ID = "vt_signin_category";
 
 	private final static String BASE_URL = "https://viettel.vn/dang-nhap";
+	
+	private final static String FORM_XPATH = "//form[@action='/dang-nhap'";
 
 	private WebDriver driver;
 	private LoginDTO loginDto;
@@ -30,6 +30,9 @@ public class LoginProcessor {
 	}
 
 	public boolean execute() {
+		 PageUtils.offlogging();
+		 
+		 
 		if (loginDto == null || StringUtils.isEmpty(loginDto.getUsername())
 				|| StringUtils.isEmpty(loginDto.getPassword()) || loginDto.getCategory() == null) {
 			return false;
@@ -37,21 +40,40 @@ public class LoginProcessor {
 
 		System.out.println(">> START LOGIN <<");
 		driver.get(BASE_URL);
-		driver.manage().timeouts().implicitlyWait(4, TimeUnit.SECONDS);
 
 		(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
 			public Boolean apply(WebDriver d) {
-				return isLoadedForm(d);
+				return d.findElement(By.id(CSRF_TOKEN)) != null;
 			}
 		});
 
 		System.out.println("form loadded");
 		// Find the text input element by its vt_signin__csrf_token
+		WebElement formLoginEl = driver.findElement(By.xpath(FORM_XPATH));
+		if(formLoginEl == null) {
+			System.out.println("formLoginEl == null");
+			return false;
+		}
 		WebElement csrfTokenEl = driver.findElement(By.id(CSRF_TOKEN));
+		if(csrfTokenEl == null) {
+			System.out.println("csrfTokenEl == null");
+			return false;
+		}
 		WebElement userNameEl = driver.findElement(By.id(USER_NAME_ID));
+		if(userNameEl == null) {
+			System.out.println("userNameEl == null");
+			return false;
+		}
 		WebElement passwordEl = driver.findElement(By.id(PASSWORD_ID));
+		if(passwordEl == null) {
+			System.out.println("passwordEl == null");
+			return false;
+		}
 		WebElement categorySignInEl = driver.findElement(By.id(SIGN_IN_CATEGORY_ID));
-		WebElement buttonLoginEl = driver.findElement(By.cssSelector("button[class='myviettel_button']"));
+		if(categorySignInEl == null) {
+			System.out.println("categorySignInEl == null");
+			return false;
+		}
 
 		// get value
 		String csrfString = csrfTokenEl.getAttribute("value");
@@ -63,7 +85,8 @@ public class LoginProcessor {
 		categorySignInEl.sendKeys(loginDto.getCategory().name());
 
 		System.out.println("param typed");
-		buttonLoginEl.click();
+		formLoginEl.submit();
+		
 		System.out.println("login clicked");
 		PageUtils.waitForLoad(driver);
 
@@ -75,11 +98,7 @@ public class LoginProcessor {
 		System.out.println(">> LOGIN FAILED <<");
 		return false;
 	}
-
-	private boolean isLoadedForm(WebDriver d) {
-		return d.findElement(By.id(CSRF_TOKEN)) != null && d.findElement(By.id(USER_NAME_ID)) != null
-				&& d.findElement(By.id(PASSWORD_ID)) != null && d.findElement(By.id(SIGN_IN_CATEGORY_ID)) != null;
-	}
+ 
 
 	public WebDriver getDriver() {
 		return driver;
