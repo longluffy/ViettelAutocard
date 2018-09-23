@@ -39,8 +39,8 @@ public class ViettelAutoProcessor {
 
 	public synchronized String execute() {
 		WebDriver driver = null;
-		 PageUtils.offlogging();
-		 
+		PageUtils.offlogging();
+
 		try {
 			IpProxyDTO ipProxyDTO = fakeProxyVN();
 
@@ -51,7 +51,7 @@ public class ViettelAutoProcessor {
 			ArrayList<String> cliArgsCap = new ArrayList<String>();
 			cliArgsCap.add("--proxy=" + ipProxyDTO.getHost() + ":" + ipProxyDTO.getPort());
 			cliArgsCap.add("--webdriver-loglevel=NONE");
- 
+
 			capabilities.setJavascriptEnabled(true);
 			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, pathExe);
 			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
@@ -115,10 +115,7 @@ public class ViettelAutoProcessor {
 			response.append(inputLine);
 		}
 		in.close();
-
-		// print in String
-		System.out.println(response.toString());
-
+ 
 		// Read JSON response and print
 		JSONObject myResponse = new JSONObject(response.toString());
 		String host = myResponse.getString("ip");
