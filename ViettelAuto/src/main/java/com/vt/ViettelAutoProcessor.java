@@ -23,6 +23,7 @@ import com.vt.dto.NapTheDTO;
 import com.vt.login.LoginProcessor;
 import com.vt.logout.LogoutProcessor;
 import com.vt.napthe.NaptheFTTHTraSauProcessor;
+import com.vt.webelement.PageUtils;
 
 public class ViettelAutoProcessor {
 
@@ -38,9 +39,8 @@ public class ViettelAutoProcessor {
 
 	public synchronized String execute() {
 		WebDriver driver = null;
-		Logger.getLogger(PhantomJSDriverService.class.getName()).setLevel(Level.OFF);
-		Logger.getLogger(ProtocolHandshake.class.getName()).setLevel(Level.OFF);
-		
+		 PageUtils.offlogging();
+		 
 		try {
 			IpProxyDTO ipProxyDTO = fakeProxyVN();
 
